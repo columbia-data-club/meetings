@@ -1,0 +1,93 @@
+---
+title: "IML"
+author: "Yiming Tan, yt2633"
+date: "April 20, 2019"
+output: 
+  pdf_document: 
+    fig_height: 3.5
+    fig_width: 4.5
+---
+
+#Data and Model
+
+Fit the model on Boston housing dataset to predict the median values
+
+```{r}
+data("Boston", package  = "MASS")
+head(Boston)
+```
+
+```{r, warning=FALSE}
+#install.packages("iml")
+#library("randomForest")
+library("iml")
+library("randomForest")
+set.seed(2019)
+rf = randomForest(medv ~ ., data = Boston, ntree = 1000, mtry = 4)
+```
+
+
+```{r}
+X = Boston[which(names(Boston) != "medv")]
+predictor = Predictor$new(rf, data = X, y = Boston$medv)
+```
+
+#Feature importance obtained by the permutation algorithm
+
+```{r}
+imp = FeatureImp$new(predictor, loss = "mae")
+plot(imp)
+```
+
+#Feature effects (ALE or PDP)
+
+```{r}
+ale = FeatureEffect$new(predictor, feature = "lstat",method = "ale",grid.size = 20)
+ale$plot()
+pdp = FeatureEffect$new(predictor, feature = "lstat",method = "pdp",grid.size = 20)
+pdp$plot()
+```
+
+```{r}
+ale$set.feature("age")
+ale$plot()
+```
+
+```{r}
+effs = FeatureEffects$new(predictor)
+plot(effs)
+```
+
+#Global Surrogate Model (Tree-based)
+
+```{r}
+tree_sur = TreeSurrogate$new(predictor,maxdepth = 2)
+plot(tree_sur)
+```
+
+```{r}
+tree_sur = TreeSurrogate$new(predictor,maxdepth = 3)
+plot(tree_sur)
+```
+
+#Local Surrogate Model
+
+LocalModel fits locally weighted linear regression models to explain the indiviual predictions.
+
+```{r,warning=FALSE}
+loc = LocalModel$new(predictor, X[1,], k = 5)
+print(loc)
+plot(loc)
+```
+
+# Shapley Value
+
+The contribution of a feature value to the difference between the actual prediction and the mean prediction
+
+
+```{r}
+shapley = Shapley$new(predictor, X[1,])
+print(shapley)
+plot(shapley)
+```
+
