@@ -1,0 +1,5 @@
+[
+    { "name":"Ford", "models":[ "Fiesta", "Focus", "Mustang" ] },
+    { "name":"BMW", "models":[ "320", "X3", "X5" ] },
+    { "nickname":"Fiat", "models":[ "500", "Panda" ] , "hobby":"basketball"}
+  ]
