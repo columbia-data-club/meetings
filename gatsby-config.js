@@ -1,16 +1,17 @@
 module.exports = {
   siteMetadata: {
-    title: `Gatsby Starter Blog`,
+    title: `CUL Data Club Meetings`,
     author: {
-      name: `Kyle Mathews`,
-      summary: `who lives and works in San Francisco building useful things.`,
+      name: `Moacir P. de Sá Perira`,
+      summary: `Research Data Librarian`,
     },
-    description: `A starter blog demonstrating what Gatsby can do.`,
-    siteUrl: `https://gatsby-starter-blog-demo.netlify.com/`,
+    description: `A guide to Data Club meetings`,
+    siteUrl: `https://cul-data-club.github.io/`,
     social: {
-      twitter: `kylemathews`,
+      twitter: `ColumbiaLibData`,
     },
   },
+  pathPrefix: `/meetings`,
   plugins: [
     {
       resolve: `gatsby-source-filesystem`,
