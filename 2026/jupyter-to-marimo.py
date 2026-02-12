@@ -7,9 +7,13 @@ app = marimo.App(width="medium", auto_download=["html"])
 @app.cell
 def _():
     import marimo as mo
+    import polars as pl
+    import datetime as dt
     import math
+    import altair
 
-    return math, mo
+    altair.data_transformers.enable("vegafusion")
+    return dt, math, mo, pl
 
 
 @app.cell(hide_code=True)
@@ -31,7 +35,9 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## The Cell
+    # Marimo and Jupyter Comparison
+
+    ### The Cell
 
     The central innovation of Jupyter notebooks was the focus on using cells to separate code into smaller chunks that could be run in small chunks. This allowed for experimentation and exploration as well as a quick process from thought to execution. Additionally, Jupyter allows for incorporating cells with Markdown prose in them as well as Python code, allowing notebooks to tell an intellectual story, documenting decisions or the way, for example, in an exploratory data analysis environment, that the data was changed around to yield particular insights.
 
@@ -43,7 +49,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Reactivity
+    ### Reactivity
 
     Let's imagine a Jupyter Notebook (this screenshot is actually from a Google Colab notebook):
 
@@ -121,7 +127,7 @@ def _():
 @app.cell(hide_code=True)
 def _(f, math, mo):
     mo.md(rf"""
-    ## Interactivity
+    ### Interactivity
 
     Because we can reliably predict the order the cells will run in, we can incorporate UI elements to alter values where they make sense in the notebook, not where they have to be so everything executes correctly when we press “Play All.”
 
@@ -148,7 +154,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## The Notebook Itself
+    ### The Notebook Itself
 
     Jupyter Notebooks are based on the `.ipynb` file format, showing their descent from [iPython](https://en.wikipedia.org/wiki/IPython). The format, however, is not Python. It is, rather, JSON. For example, the Colab Notebook I screenshotted earlier looks like this:
 
@@ -262,10 +268,237 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    ## Marimo and WASM
+    ### Marimo and WASM
 
-    What’s more, because the notebook a self-contained Python script, Marimo lets you export the notebook as a stand-alone web page that leverages [WASM](https://en.wikipedia.org/wiki/WebAssembly) to ship a functional notebook served as a regular webpage.
+    What’s more, because the notebook a self-contained Python script, Marimo lets you export the notebook as a stand-alone web page that leverages [WASM](https://en.wikipedia.org/wiki/WebAssembly) to ship a functional notebook served as a regular webpage. This command:
+
+    ```sh
+    uv run marimo export html-wasm jupyter-to-marimo.py -o jupyter-to-marimo --mode edit
+    ```
+
+    Produces a folder that holds all the necessary web assets to serve the notebook as a regular webpage. The WASM version of the notebook is fully functional, and it can be shared with anyone, even if they do not have Jupyter (or even Python!) installed on their machine.
+
+    Of course, the WASM version is what you’re currently using on your own computer!
     """)
+    return
+
+
+@app.cell
+def _():
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ## Using Data
+
+    With a general sense of how Marimo works in comparison to Jupyter, now we can move ahead to using Marimo in the context of a regular notebook. In this case, we can do some exploratory data analysis on the [November 2025 NYC Yellow Cab trip data](https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-11.parquet), which we will read with [Polars](https://pola.rs).
+    """)
+    return
+
+
+@app.cell
+def _():
+    taxi_data_url = "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2025-11.parquet"
+    return (taxi_data_url,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Linear Transforms (Pandas Classic)
+    """)
+    return
+
+
+@app.cell
+def _(pl, taxi_data_url):
+    raw_df = pl.read_parquet(taxi_data_url)
+    raw_df.head()
+    return (raw_df,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    We have some amusing widgets and interactivity even from this basic `.head()` method in Polars. Let’s do even better.
+    """)
+    return
+
+
+@app.cell
+def _(raw_df):
+    raw_df
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Now we see all four million rows of the dataframe we downloaded, and we can sort and filter the data as well. First, however, let’s get rid of some of the columns and rename them.
+    """)
+    return
+
+
+@app.cell
+def _(pl):
+    renamed_columns = [
+            pl.col("tpep_pickup_datetime").alias("pickup"),
+            pl.col("tpep_dropoff_datetime").alias("dropoff"),
+            pl.col("passenger_count").alias("passengers"),
+            pl.col("trip_distance").alias("distance"),
+            pl.col("fare_amount").alias("fare"),
+            pl.col("tip_amount").alias("tip"),
+            pl.col("total_amount").alias("total")
+        ]
+    return (renamed_columns,)
+
+
+@app.cell
+def _(raw_df, renamed_columns):
+    df = raw_df.select(renamed_columns)
+    df
+    return (df,)
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    If you’re used to using pandas, you are probably used to having a bunch of lines of code, where each line transforms the dataframe that look something like this:
+
+    ```py
+    df = df[df["passengers"] > 0]
+    df = df[df["distance"] > 0]
+    df = df[df["fare"] > 0]
+    df["tip_pct"] = df["tip"] / df["fare"]
+    ```
+
+    In Marimo, this will work as long as these reassignments to `df` are all in the same cell. If we broke this apart into multiple cells, however, what will happen? Why?
+
+    One option to fix this is to split up each transformation into its own function.
+    """)
+    return
+
+
+@app.cell
+def _(df, pl):
+    filtered_df = df.filter(
+        (pl.col("passengers") > 0) &
+        (pl.col("distance") > 0) &
+        (pl.col("fare") > 0)
+    )
+    filtered_df
+    return
+
+
+@app.cell
+def _(pl):
+    def passengers_above_zero(df):
+        return df.filter(pl.col("passengers") > 0)
+
+    return
+
+
+@app.cell
+def _(pl):
+    def distance_above_zero(df):
+        return df.filter(pl.col("distance") > 0)
+
+    return
+
+
+@app.cell
+def _(pl):
+    def fare_above_zero(df):
+        return df.filter(pl.col("fare") > 0)
+
+    return
+
+
+@app.cell
+def _(pl):
+    def add_tip_pct(df):
+        return df.with_columns((pl.col("tip") / pl.col("fare")).alias("tip_pct"))
+
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    In pandas, we would then chain these functions together with a series of `pipe()` calls, in what Polars calls “[pipe littering](https://docs.pola.rs/user-guide/migration/pandas/#pipe-littering).” This is inefficient in Polars, because it relies on a linearity that reproduces the linearity of the Jupyter notebook, where everything has to be executed in a specific order so that it may work.
+
+    Part of the power of Polars lies in its [query optimizations in lazy mode](https://docs.pola.rs/user-guide/lazy/optimizations/), so let’s reimagine all of the above using the optimizations.
+    """)
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    ### Lazy Transforms (Polars Awesome)
+    """)
+    return
+
+
+@app.cell
+def _(pl, renamed_columns, taxi_data_url):
+    q1 = (
+        pl.scan_parquet(taxi_data_url)
+        .select(renamed_columns)
+        .filter(
+            (pl.col("passengers") > 0) &
+            (pl.col("distance") > 0) &
+            (pl.col("fare") > 0)
+        )
+        .with_columns((pl.col("tip") / pl.col("fare")).alias("tip_pct"))
+    )
+    return (q1,)
+
+
+@app.cell
+def _(q1):
+    q1
+    return
+
+
+@app.cell(hide_code=True)
+def _(mo):
+    mo.md(r"""
+    Even better, let’s just look at the taxi rides for Thanksgiving weekend.
+    """)
+    return
+
+
+@app.cell
+def _(dt, pl, renamed_columns, taxi_data_url):
+    q2 = (
+        pl.scan_parquet(taxi_data_url)
+        .select(renamed_columns)
+        .filter(
+            pl.col("pickup").is_between(dt.datetime( 2025, 11, 26), dt.datetime(2025, 11, 29))
+     &
+            (pl.col("passengers") > 0) &
+            (pl.col("distance") > 0) &
+            (pl.col("fare") > 0)
+        )
+        .with_columns((pl.col("tip") / pl.col("fare")).alias("tip_pct"))
+    )
+    q2
+    return (q2,)
+
+
+@app.cell
+def _(mo, q2):
+    df_good = q2.collect()
+    mo.ui.table(df_good)
+    return (df_good,)
+
+
+@app.cell
+def _(df_good, mo):
+    mo.ui.dataframe(df_good)
     return
 
 
