@@ -125,12 +125,18 @@ def _():
 
 
 @app.cell(hide_code=True)
-def _(f, math, mo):
+def _(mo):
     mo.md(rf"""
     ### Interactivity
 
     Because we can reliably predict the order the cells will run in, we can incorporate UI elements to alter values where they make sense in the notebook, not where they have to be so everything executes correctly when we press “Play All.”
+    """)
+    return
 
+
+@app.cell(hide_code=True)
+def _(f, math, mo):
+    mo.md(rf"""
     $e^f = {math.exp(f.value):0.3f}\ ;\quad f = {f.value}$
     """)
     return
