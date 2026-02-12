@@ -35,7 +35,7 @@ def _(mo):
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(r"""
-    # Marimo and Jupyter Comparison
+    ## Marimo and Jupyter Comparison
 
     ### The Cell
 
