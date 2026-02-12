@@ -118,12 +118,6 @@ def _(mo):
     return
 
 
-@app.cell
-def _():
-    e = 5
-    return (e,)
-
-
 @app.cell(hide_code=True)
 def _(mo):
     mo.md(rf"""
@@ -286,11 +280,6 @@ def _(mo):
 
     Of course, the WASM version is what you’re currently using on your own computer!
     """)
-    return
-
-
-@app.cell
-def _():
     return
 
 
@@ -510,7 +499,8 @@ def _(df_good, mo):
 
 @app.cell
 def _():
-    return
+    e = 5
+    return (e,)
 
 
 if __name__ == "__main__":
