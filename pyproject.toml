@@ -5,6 +5,7 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "altair>=6.0.0",
     "arviz>=0.23.4",
     "beautifulsoup4>=4.14.3",
     "cartopy>=0.25.0",
@@ -30,5 +31,7 @@ dependencies = [
     "spacy>=3.8.11",
     "textacy>=0.13.0",
     "tqdm>=4.67.3",
+    "vegafusion>=2.0.3",
+    "vl-convert-python>=1.9.0.post1",
     "xarray>=2026.1.0",
 ]
